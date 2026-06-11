@@ -1,26 +1,88 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-tar: #121110;
+  --color-char: #1b1917;
+  --color-line: #2e2a25;
+  --color-bone: #ede8e0;
+  --color-ash: #9b938a;
+  --color-signal: #ff6b2c;
+  --color-ember: #e8551a;
+  --color-mint: #4fd180;
+  --color-alarm: #ff5050;
+
+  --font-sans: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SF Mono", monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-tar);
+  color: var(--color-bone);
+}
+
+::selection {
+  background: var(--color-signal);
+  color: var(--color-tar);
+}
+
+@utility bg-scanlines {
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(237, 232, 224, 0.6) 0px,
+    rgba(237, 232, 224, 0.6) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+@utility animate-fade-up {
+  animation: fade-up 0.55s cubic-bezier(0.22, 0.8, 0.3, 1) both;
+}
+
+@utility animate-blink {
+  animation: blink 1.1s linear infinite;
+}
+
+@utility scan-track {
+  overflow: hidden;
+}
+
+@utility scan-bar {
+  animation: scan 1.5s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0.12;
+  }
+}
+
+@keyframes scan {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(310%);
+  }
 }
