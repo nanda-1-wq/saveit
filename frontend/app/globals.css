@@ -75,14 +75,15 @@ body,
   color: #ffffff;
 }
 
-/* Arabic mode: Cairo for UI text (loaded on demand), per-glyph Cairo fallback
-   inside mono labels, and no letter-spacing — tracking breaks Arabic joining. */
+/* Arabic mode: Cairo for UI text (bundled via next/font since Arabic is the
+   default), per-glyph Cairo fallback inside mono labels, and no
+   letter-spacing — tracking breaks Arabic joining. */
 html[lang="ar"] body {
-  font-family: "Cairo", var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-cairo), var(--font-geist), ui-sans-serif, system-ui, sans-serif;
 }
 
 html[lang="ar"] .font-mono {
-  font-family: var(--font-plex-mono), "Cairo", ui-monospace, monospace;
+  font-family: var(--font-plex-mono), var(--font-cairo), ui-monospace, monospace;
 }
 
 html[lang="ar"] * {

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import Panel from "@/components/Panel";
 import PlatformIcon from "@/components/PlatformIcon";
 import type { VideoFormat, VideoInfo } from "@/lib/api";
@@ -18,6 +18,7 @@ interface Props {
 
 export default function FormatPicker({ info, selected, onSelect, onDownload, onCancel }: Props) {
   const t = useT();
+  const [thumbBroken, setThumbBroken] = useState(false);
   const video = info.formats.filter((format) => format.ext === "mp4");
   const audio = info.formats.filter((format) => format.ext === "mp3");
   const meta = PLATFORMS[info.platform];
@@ -26,17 +27,20 @@ export default function FormatPicker({ info, selected, onSelect, onDownload, onC
   return (
     <Panel className="mt-6 animate-fade-up text-start">
       <div className="flex gap-4">
-        {info.thumbnail ? (
+        {info.thumbnail && !thumbBroken ? (
           // eslint-disable-next-line @next/next/no-img-element -- external CDN thumbnails, no optimizer
           <img
             src={info.thumbnail}
             alt=""
             referrerPolicy="no-referrer"
+            onError={() => setThumbBroken(true)}
             className="h-20 w-32 shrink-0 rounded-xl border border-white/10 object-cover"
           />
         ) : (
-          <span className="glass-soft grid h-20 w-32 shrink-0 place-items-center rounded-xl text-white/50">
-            <PlatformIcon platform={info.platform} className="h-6 w-6" />
+          <span className="grad-primary grid h-20 w-32 shrink-0 place-items-center rounded-xl opacity-80">
+            <svg viewBox="0 0 24 24" className="h-7 w-7" fill="#fff" aria-hidden>
+              <path d="M8.5 5.5v13l10-6.5-10-6.5Z" />
+            </svg>
           </span>
         )}
         <div className="min-w-0">

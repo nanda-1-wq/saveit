@@ -77,9 +77,9 @@ const en = {
       body: "Files stream straight to your browser and are wiped from the server the moment they're sent.",
     },
   ],
-  showcaseTitle: "Every format, one click away",
+  showcaseTitle: "Every Format, One Click Away",
   showcaseSub:
-    "The picker shows exactly what the source offers — real resolutions, real file sizes, nothing upscaled or faked.",
+    "The list shows exactly what the source provides — real resolutions and real file sizes. Nothing padded or made up.",
   // footer
   builtPrefix: "Built by Adnan · ",
   builtSuffix: " on X",
@@ -158,7 +158,7 @@ const ar: Dict = {
   ],
   showcaseTitle: "كل صيغة بنقرة واحدة",
   showcaseSub:
-    "تعرض القائمة ما يوفره المصدر بالضبط — دقات حقيقية وأحجام ملفات حقيقية، لا شيء مزيّف أو مكبّر.",
+    "تعرض القائمة ما يوفره المصدر بالضبط — دقات حقيقية وأحجام ملفات حقيقية. لا شيء مبالغ فيه أو مختلق.",
   builtPrefix: "بناه عدنان · ",
   builtSuffix: " على X",
   footerRight: "للاستخدام الشخصي فقط. احترم أصحاب المحتوى.",
@@ -168,7 +168,7 @@ const ar: Dict = {
 
 export const STRINGS: Record<Lang, Dict> = { en, ar };
 
-const LangContext = createContext<Lang>("en");
+const LangContext = createContext<Lang>("ar");
 
 export function LangProvider({ lang, children }: { lang: Lang; children: ReactNode }) {
   return <LangContext.Provider value={lang}>{children}</LangContext.Provider>;

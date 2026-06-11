@@ -28,7 +28,7 @@ export default function Home() {
   const requestSeq = useRef(0);
 
   const [theme, setTheme] = useState<Theme>("dark");
-  const [lang, setLang] = useState<Lang>("en");
+  const [lang, setLang] = useState<Lang>("ar");
   const [visits, setVisits] = useState<number | null>(null);
   const [toast, setToast] = useState<{ id: number; filename: string } | null>(null);
   const toastSeq = useRef(0);
@@ -70,16 +70,6 @@ export default function Home() {
     } catch {
       // storage blocked — preference just won't persist
     }
-  }, [lang]);
-
-  useEffect(() => {
-    // Cairo is only fetched once Arabic is actually selected.
-    if (lang !== "ar" || document.getElementById("cairo-font")) return;
-    const link = document.createElement("link");
-    link.id = "cairo-font";
-    link.rel = "stylesheet";
-    link.href = "https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap";
-    document.head.appendChild(link);
   }, [lang]);
 
   useEffect(() => {
@@ -511,14 +501,21 @@ const SHOWCASE_MP4 = [
   { label: "2160p60", size: "3.8 GB" },
   { label: "1440p60", size: "2.1 GB" },
   { label: "1080p60", size: "1.2 GB", selected: true },
-  { label: "720p", size: "640 MB" },
+  { label: "720p60", size: "720 MB" },
   { label: "480p", size: "320 MB" },
   { label: "360p", size: "180 MB" },
+  { label: "240p", size: "95 MB" },
+  { label: "144p", size: "45 MB" },
 ];
 
-const SHOWCASE_MP3 = ["320 kbps", "192 kbps", "128 kbps"];
+const SHOWCASE_MP3 = [
+  { label: "320 kbps", selected: true },
+  { label: "192 kbps", selected: false },
+  { label: "128 kbps", selected: false },
+];
 
-// Pure visual demo of the picker — intentionally non-interactive.
+// Pure visual demo of the picker — intentionally non-interactive. Cards are
+// pinned dir="ltr" so resolutions and sizes never reorder in Arabic mode.
 function FormatShowcase() {
   const t = useT();
   return (
@@ -527,65 +524,85 @@ function FormatShowcase() {
         <h2 className="text-center text-3xl font-extrabold tracking-[-1px] sm:text-4xl">
           {t.showcaseTitle}
         </h2>
-        <p className="mx-auto mt-4 max-w-[560px] text-center text-base leading-[1.7] text-white/65">
+        <p className="mx-auto mt-4 max-w-[600px] text-center text-base leading-[1.7] text-white/65">
           {t.showcaseSub}
         </p>
       </Reveal>
       <Reveal delay={120}>
-        <div aria-hidden className="glass mx-auto mt-12 max-w-3xl rounded-3xl p-6 text-start sm:p-8">
-          <div className="flex gap-4">
-            <div className="grad-primary h-20 w-32 shrink-0 rounded-xl opacity-60" />
-            <div className="min-w-0">
-              <p className="text-lg font-bold tracking-tight">
-                Northern lights over Lofoten — 4K
+        <div aria-hidden className="glass mx-auto mt-12 w-full max-w-[780px] rounded-3xl p-6 sm:p-8">
+          <div className="grid gap-6 sm:grid-cols-[1.7fr_1px_1fr] sm:gap-7">
+            <div>
+              <p className="font-mono text-[11px] uppercase tracking-[2px] text-electric">
+                {t.videoMp4}
               </p>
-              <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-white/50">
-                youtube · 12:48 · <span className="text-mint">{t.sourceLocked}</span>
+              <div dir="ltr" className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                {SHOWCASE_MP4.map((format) => (
+                  <ShowcaseCard
+                    key={format.label}
+                    label={format.label}
+                    sub={format.size}
+                    selected={Boolean(format.selected)}
+                    accent="electric"
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="hidden bg-white/8 sm:block" />
+
+            <div>
+              <p className="font-mono text-[11px] uppercase tracking-[2px] text-violet">
+                {t.audioMp3}
               </p>
+              <div dir="ltr" className="mt-4 flex flex-col gap-2.5">
+                {SHOWCASE_MP3.map((format) => (
+                  <ShowcaseCard
+                    key={format.label}
+                    label={format.label}
+                    sub={t.audioChip}
+                    selected={format.selected}
+                    accent="violet"
+                  />
+                ))}
+              </div>
             </div>
           </div>
 
-          <p className="mt-6 font-mono text-[10px] uppercase tracking-[0.22em] text-white/40">
-            {t.videoMp4}
-          </p>
-          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {SHOWCASE_MP4.map((format) => (
-              <div
-                key={format.label}
-                className={`rounded-xl border px-3 py-2.5 ${
-                  format.selected
-                    ? "border-electric bg-electric/15 shadow-[0_0_24px_rgba(79,140,255,0.25)]"
-                    : "glass-soft"
-                }`}
-              >
-                <span className="block text-base font-bold leading-none tracking-tight">
-                  {format.label}
-                </span>
-                <span className="mt-1.5 block font-mono text-[10px] uppercase tracking-wider text-white/50">
-                  {format.size}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          <p className="mt-6 font-mono text-[10px] uppercase tracking-[0.22em] text-white/40">
-            {t.audioMp3}
-          </p>
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            {SHOWCASE_MP3.map((label) => (
-              <div key={label} className="glass-soft rounded-xl border px-3 py-2.5">
-                <span className="block text-base font-bold leading-none tracking-tight">
-                  {label}
-                </span>
-                <span className="mt-1.5 block font-mono text-[10px] uppercase tracking-wider text-white/50">
-                  {t.audioChip}
-                </span>
-              </div>
-            ))}
+          <div className="grad-primary pointer-events-none mt-7 w-full cursor-default rounded-full py-3.5 text-center text-sm font-bold tracking-wide text-[#fff] shadow-[0_8px_24px_rgba(79,140,255,0.35)]">
+            {t.download("1080P60")}
           </div>
         </div>
       </Reveal>
     </section>
+  );
+}
+
+function ShowcaseCard({
+  label,
+  sub,
+  selected,
+  accent,
+}: {
+  label: string;
+  sub: string;
+  selected: boolean;
+  accent: "electric" | "violet";
+}) {
+  const selectedStyle =
+    accent === "electric"
+      ? "border-[1.5px] border-electric bg-[rgba(79,140,255,0.12)] shadow-[0_0_16px_rgba(79,140,255,0.25)]"
+      : "border-[1.5px] border-violet bg-[rgba(139,92,246,0.12)] shadow-[0_0_16px_rgba(139,92,246,0.25)]";
+  return (
+    <div
+      className={`rounded-xl px-4 py-3.5 transition-all duration-200 hover:scale-[1.02] ${
+        selected ? selectedStyle : "glass-soft hover:border-white/30"
+      }`}
+    >
+      <span className="block text-base font-bold leading-none tracking-tight">{label}</span>
+      <span className="mt-1.5 block font-mono text-[10px] uppercase tracking-wider text-white/50">
+        {sub}
+      </span>
+    </div>
   );
 }
 
