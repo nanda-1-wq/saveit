@@ -20,13 +20,20 @@ export function formatDuration(totalSeconds?: number | null): string | null {
   return `${hours ? `${hours}:` : ""}${mm}:${String(seconds).padStart(2, "0")}`;
 }
 
-export function timeAgo(timestamp: number): string {
+export function timeAgo(timestamp: number, lang: "en" | "ar" = "en"): string {
   const minutes = Math.floor((Date.now() - timestamp) / 60_000);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  if (lang === "ar") {
+    if (minutes < 1) return "الآن";
+    if (minutes < 60) return `قبل ${minutes} د`;
+    if (hours < 24) return `قبل ${hours} س`;
+    if (days < 7) return `قبل ${days} ي`;
+    return new Date(timestamp).toLocaleDateString();
+  }
   if (minutes < 1) return "just now";
   if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
   if (days < 7) return `${days}d ago`;
   return new Date(timestamp).toLocaleDateString();
 }

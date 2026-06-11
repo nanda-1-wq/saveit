@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Panel from "@/components/Panel";
 import { timeAgo } from "@/lib/format";
 import type { HistoryItem } from "@/lib/history";
+import { useLang, useT } from "@/lib/i18n";
 
 interface Props {
   item: HistoryItem;
@@ -15,6 +16,8 @@ interface Props {
 // The anchor-triggered download is opaque to JS, so this panel narrates the
 // hand-off: a short "transferring" beat, then a done state with guidance.
 export default function DownloadProgress({ item, canRepick, onRepick, onReset }: Props) {
+  const t = useT();
+  const lang = useLang();
   const [done, setDone] = useState(false);
 
   useEffect(() => {
@@ -24,26 +27,25 @@ export default function DownloadProgress({ item, canRepick, onRepick, onReset }:
 
   if (!done) {
     return (
-      <Panel className="mt-6 animate-fade-up">
-        <p className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-signal">
-          <span className="h-2 w-2 rounded-full bg-signal animate-blink" />
-          handing off to your browser
+      <Panel className="mt-6 animate-fade-up text-start">
+        <p className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-electric">
+          <span className="h-2 w-2 rounded-full bg-electric animate-blink" />
+          {t.handingOff}
         </p>
-        <div className="scan-track mt-4 h-1 w-full bg-line">
-          <div className="scan-bar h-full w-1/3 bg-signal" />
+        <div className="scan-track mt-4 h-1.5 w-full rounded-full bg-white/10">
+          <div className="scan-bar grad-primary h-full w-1/3 rounded-full" />
         </div>
-        <p className="mt-4 font-mono text-xs leading-relaxed text-ash">
-          The server is fetching and converting the file. Large videos can take a minute
-          before your browser shows the save dialog.
+        <p className="mt-4 font-mono text-xs leading-relaxed text-white/50">
+          {t.serverConverting}
         </p>
       </Panel>
     );
   }
 
   return (
-    <Panel className="mt-6 animate-fade-up">
+    <Panel className="mt-6 animate-fade-up text-start">
       <p className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-mint">
-        <span className="grid h-4 w-4 place-items-center bg-mint text-tar">
+        <span className="grid h-4 w-4 place-items-center rounded-full bg-mint text-navy">
           <svg
             viewBox="0 0 24 24"
             fill="none"
@@ -54,45 +56,44 @@ export default function DownloadProgress({ item, canRepick, onRepick, onReset }:
             <path d="M20 6 9 17l-5-5" />
           </svg>
         </span>
-        sent to your browser
+        {t.sentToBrowser}
       </p>
-      <div className="mt-4 flex items-center gap-3 border border-line bg-tar p-3">
+      <div className="glass-soft mt-4 flex items-center gap-3 rounded-xl p-3">
         {item.thumbnail && (
           // eslint-disable-next-line @next/next/no-img-element -- external CDN thumbnails, no optimizer
           <img
             src={item.thumbnail}
             alt=""
             referrerPolicy="no-referrer"
-            className="h-12 w-20 shrink-0 border border-line object-cover"
+            className="h-12 w-20 shrink-0 rounded-lg border border-white/10 object-cover"
           />
         )}
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold">{item.title}</p>
-          <p className="mt-0.5 font-mono text-[10px] uppercase tracking-widest text-ash">
-            {item.format} · {timeAgo(item.timestamp)}
+          <p className="mt-0.5 font-mono text-[10px] uppercase tracking-widest text-white/50">
+            {item.format} · {timeAgo(item.timestamp, lang)}
           </p>
         </div>
       </div>
-      <p className="mt-3 font-mono text-[11px] leading-relaxed text-ash">
-        Nothing appeared? It may still be converting — give it a moment, then check your
-        downloads folder.
+      <p className="mt-3 font-mono text-[11px] leading-relaxed text-white/50">
+        {t.nothingAppeared}
       </p>
       <div className="mt-5 flex flex-col gap-2 sm:flex-row">
         {canRepick && (
           <button
             type="button"
             onClick={onRepick}
-            className="border border-line px-4 py-3 font-mono text-[11px] uppercase tracking-[0.18em] text-ash transition hover:border-ash hover:text-bone"
+            className="rounded-full border border-white/15 px-5 py-3 font-mono text-[11px] uppercase tracking-[0.18em] text-white/60 transition hover:border-white/40 hover:text-white"
           >
-            another quality
+            {t.anotherQuality}
           </button>
         )}
         <button
           type="button"
           onClick={onReset}
-          className="flex-1 bg-signal py-3 font-display text-sm font-bold tracking-wide text-tar transition hover:bg-ember"
+          className="grad-primary flex-1 rounded-full py-3 text-sm font-bold tracking-wide text-[#fff] shadow-[0_8px_24px_rgba(79,140,255,0.35)] transition hover:brightness-110"
         >
-          GRAB ANOTHER LINK
+          {t.grabAnother}
         </button>
       </div>
     </Panel>

@@ -9,7 +9,8 @@ export const PLATFORMS: Record<Platform, PlatformMeta> = {
   youtube: { name: "YouTube", color: "#ff4242" },
   instagram: { name: "Instagram", color: "#f0589b" },
   tiktok: { name: "TikTok", color: "#3de8e2" },
-  twitter: { name: "X", color: "#ede8e0" },
+  // X's brand color is theme-dependent (white on dark, navy on light).
+  twitter: { name: "X", color: "var(--x-brand)" },
   facebook: { name: "Facebook", color: "#4d8df7" },
 };
 
