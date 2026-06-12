@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import shutil
 import tempfile
@@ -323,7 +324,7 @@ def _map_yt_error(exc: Exception) -> DownloadServiceError:
 
 
 def _base_opts() -> dict[str, Any]:
-    return {
+    opts: dict[str, Any] = {
         "quiet": True,
         "no_warnings": True,
         "noprogress": True,
@@ -332,6 +333,27 @@ def _base_opts() -> dict[str, Any]:
         "socket_timeout": 30,
         "retries": 3,
     }
+    cookie_file = _cookie_file()
+    if cookie_file:
+        opts["cookiefile"] = cookie_file
+    return opts
+
+
+def _cookie_file() -> str | None:
+    """Writable copy of the browser-cookie export, if one is configured.
+
+    YouTube challenges datacenter IPs, so production supplies a logged-in
+    session via a Render Secret File. yt-dlp rewrites the cookie jar after
+    each run and Render mounts secrets read-only — hence the /tmp copy.
+    Absent file means no-op (local dev, other platforms).
+    """
+    source = os.getenv("YTDLP_COOKIES_FILE", "/etc/secrets/cookies.txt")
+    if not os.path.isfile(source):
+        return None
+    writable = Path(tempfile.gettempdir()) / "saveit-cookies.txt"
+    if not writable.exists():
+        shutil.copyfile(source, writable)
+    return str(writable)
 
 
 def _require_platform(url: str) -> str:
