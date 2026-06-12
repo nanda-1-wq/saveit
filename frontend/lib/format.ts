@@ -1,13 +1,23 @@
-export function formatBytes(bytes?: number | null): string | null {
+function trimZeros(value: string): string {
+  return value.replace(/\.0+$/, "");
+}
+
+// <1 GB → MB with 1 decimal ("320 MB"); ≥1 GB → GB with up to 2 decimals ("1.2 GB").
+export function formatSize(bytes?: number | null): string | null {
   if (!bytes || bytes <= 0) return null;
-  const units = ["B", "KB", "MB", "GB"];
-  let value = bytes;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit++;
-  }
-  return `${value >= 100 || unit === 0 ? Math.round(value) : value.toFixed(1)} ${units[unit]}`;
+  const GB = 1024 ** 3;
+  const MB = 1024 ** 2;
+  if (bytes >= GB) return `${trimZeros((bytes / GB).toFixed(2).replace(/0$/, ""))} GB`;
+  return `${trimZeros((bytes / MB).toFixed(1))} MB`;
+}
+
+// Estimated MP3 size in MB: (seconds × kbps) / 8 / 1024.
+export function estimateMp3Mb(
+  durationSeconds?: number | null,
+  bitrateKbps?: number | null,
+): string | null {
+  if (!durationSeconds || !bitrateKbps) return null;
+  return trimZeros(((durationSeconds * bitrateKbps) / 8 / 1024).toFixed(1));
 }
 
 export function formatDuration(totalSeconds?: number | null): string | null {

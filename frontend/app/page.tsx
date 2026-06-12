@@ -2,14 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import BrandLogos from "@/components/BrandLogos";
-import DownloadBar from "@/components/DownloadBar";
+import DownloadBar, { type DownloadJob } from "@/components/DownloadBar";
 import DownloadProgress from "@/components/DownloadProgress";
 import FormatPicker from "@/components/FormatPicker";
 import HistoryList from "@/components/HistoryList";
 import Panel from "@/components/Panel";
 import Reveal from "@/components/Reveal";
 import UrlInput from "@/components/UrlInput";
-import { fetchVideoInfo, triggerDownload, type VideoFormat, type VideoInfo } from "@/lib/api";
+import { downloadFile, fetchVideoInfo, type VideoFormat, type VideoInfo } from "@/lib/api";
 import { clearHistory, loadHistory, pushHistory, type HistoryItem } from "@/lib/history";
 import { LangProvider, localizeError, STRINGS, useT, type Lang } from "@/lib/i18n";
 import { detectPlatform, isLikelyUrl, PLATFORMS, type Platform } from "@/lib/platforms";
@@ -30,8 +30,10 @@ export default function Home() {
   const [theme, setTheme] = useState<Theme>("dark");
   const [lang, setLang] = useState<Lang>("ar");
   const [visits, setVisits] = useState<number | null>(null);
-  const [toast, setToast] = useState<{ id: number; filename: string } | null>(null);
-  const toastSeq = useRef(0);
+  const [job, setJob] = useState<DownloadJob | null>(null);
+  const jobSeq = useRef(0);
+  const abortRef = useRef<AbortController | null>(null);
+  const progressTs = useRef(0);
   const counted = useRef(false);
   const themeApplied = useRef(false);
   const langApplied = useRef(false);
@@ -127,9 +129,30 @@ export default function Home() {
   }
 
   function startDownload() {
-    if (!info || !selected) return;
+    if (!info || !selected || job?.status === "downloading") return;
     const filename = `${info.title}.${selected.ext}`;
-    triggerDownload(url, selected.format_id, selected.ext, filename);
+    const id = ++jobSeq.current;
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    // Pre-warn on big files using the size we already know from /info
+    // (Content-Length refines this once headers arrive).
+    const knownBytes =
+      selected.ext === "mp4"
+        ? (selected.filesize_approx ?? 0)
+        : info.duration && selected.abr
+          ? info.duration * selected.abr * 128
+          : 0;
+    setJob({
+      id,
+      filename,
+      status: "downloading",
+      received: 0,
+      total: null,
+      percent: null,
+      largeFile: knownBytes > 500 * 1024 * 1024,
+    });
+
     const item: HistoryItem = {
       title: info.title,
       platform: info.platform,
@@ -140,7 +163,51 @@ export default function Home() {
     setHistory(pushHistory(item));
     setLastSave(item);
     setStage("sent");
-    setToast({ id: ++toastSeq.current, filename });
+
+    progressTs.current = 0;
+    downloadFile(url, selected.format_id, selected.ext, filename, controller.signal, (received, total, percent) => {
+      // Chunks arrive far faster than the UI needs — cap updates to ~10/s.
+      const now = Date.now();
+      if (now - progressTs.current < 100 && percent !== 100) return;
+      progressTs.current = now;
+      setJob((current) =>
+        current && current.id === id
+          ? {
+              ...current,
+              received,
+              total,
+              percent,
+              largeFile: current.largeFile || (total ?? 0) > 500 * 1024 * 1024,
+            }
+          : current,
+      );
+    })
+      .then(() => {
+        setJob((current) =>
+          current && current.id === id
+            ? {
+                ...current,
+                status: "complete",
+                percent: 100,
+                received: current.total ?? current.received,
+              }
+            : current,
+        );
+      })
+      .catch((err: unknown) => {
+        setJob((current) => {
+          if (!current || current.id !== id) return current;
+          if (controller.signal.aborted) return { ...current, status: "cancelled" };
+          return {
+            ...current,
+            status: "error",
+            error:
+              err instanceof Error
+                ? err.message
+                : "Something went wrong. Try again or paste a different link.",
+          };
+        });
+      });
   }
 
   function reset() {
@@ -153,7 +220,8 @@ export default function Home() {
     setLastSave(null);
   }
 
-  const dismissToast = useCallback(() => setToast(null), []);
+  const cancelJob = useCallback(() => abortRef.current?.abort(), []);
+  const dismissJob = useCallback(() => setJob(null), []);
   // Home itself sits outside LangProvider, so it reads the dictionary directly.
   const t = STRINGS[lang];
 
@@ -196,6 +264,7 @@ export default function Home() {
                 busy={stage === "fetching"}
                 onChange={setUrl}
                 onSubmit={submit}
+                onClear={reset}
               />
 
               <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
@@ -239,6 +308,8 @@ export default function Home() {
                   onSelect={setSelected}
                   onDownload={startDownload}
                   onCancel={reset}
+                  downloading={job?.status === "downloading"}
+                  downloadPercent={job?.status === "downloading" ? job.percent : null}
                 />
               )}
 
@@ -270,9 +341,7 @@ export default function Home() {
 
         <Footer />
 
-        {toast && (
-          <DownloadBar key={toast.id} filename={toast.filename} onDismiss={dismissToast} />
-        )}
+        {job && <DownloadBar key={job.id} job={job} onCancel={cancelJob} onDismiss={dismissJob} />}
       </div>
     </LangProvider>
   );

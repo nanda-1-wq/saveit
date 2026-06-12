@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 import Panel from "@/components/Panel";
 import PlatformIcon from "@/components/PlatformIcon";
 import type { VideoFormat, VideoInfo } from "@/lib/api";
-import { formatBytes, formatDuration } from "@/lib/format";
+import { estimateMp3Mb, formatDuration, formatSize } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { PLATFORMS } from "@/lib/platforms";
 
@@ -14,15 +14,34 @@ interface Props {
   onSelect: (format: VideoFormat) => void;
   onDownload: () => void;
   onCancel: () => void;
+  downloading: boolean;
+  downloadPercent: number | null;
 }
 
-export default function FormatPicker({ info, selected, onSelect, onDownload, onCancel }: Props) {
+function sizeLabel(format: VideoFormat, duration: number | null): string | null {
+  if (format.ext === "mp3") {
+    const estimate = estimateMp3Mb(duration, format.abr);
+    return estimate ? `~${estimate} MB` : null;
+  }
+  return formatSize(format.filesize_approx);
+}
+
+export default function FormatPicker({
+  info,
+  selected,
+  onSelect,
+  onDownload,
+  onCancel,
+  downloading,
+  downloadPercent,
+}: Props) {
   const t = useT();
   const [thumbBroken, setThumbBroken] = useState(false);
   const video = info.formats.filter((format) => format.ext === "mp4");
   const audio = info.formats.filter((format) => format.ext === "mp3");
   const meta = PLATFORMS[info.platform];
   const duration = formatDuration(info.duration);
+  const selectedSize = selected ? sizeLabel(selected, info.duration) : null;
 
   return (
     <Panel className="mt-6 animate-fade-up text-start">
@@ -64,6 +83,7 @@ export default function FormatPicker({ info, selected, onSelect, onDownload, onC
             <FormatCard
               key={`${format.format_id}-${format.label}`}
               format={format}
+              duration={info.duration}
               active={selected === format}
               onSelect={() => onSelect(format)}
             />
@@ -77,6 +97,7 @@ export default function FormatPicker({ info, selected, onSelect, onDownload, onC
             <FormatCard
               key={`${format.format_id}-${format.label}`}
               format={format}
+              duration={info.duration}
               active={selected === format}
               onSelect={() => onSelect(format)}
             />
@@ -95,10 +116,29 @@ export default function FormatPicker({ info, selected, onSelect, onDownload, onC
         <button
           type="button"
           onClick={onDownload}
-          disabled={!selected}
+          disabled={!selected || downloading}
           className="grad-primary flex-1 rounded-full py-3.5 text-sm font-bold tracking-wide text-[#fff] shadow-[0_8px_24px_rgba(79,140,255,0.35)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {selected ? t.download(selected.label.toUpperCase()) : t.pickFormat}
+          {downloading ? (
+            <>
+              {t.downloading}
+              {downloadPercent !== null && (
+                <span dir="ltr" className="ms-1.5">
+                  {downloadPercent}%
+                </span>
+              )}
+            </>
+          ) : selected ? (
+            <>
+              {t.grab}{" "}
+              <span dir="ltr">
+                {selected.label}
+                {selectedSize ? ` · ${selectedSize}` : ""}
+              </span>
+            </>
+          ) : (
+            t.pickFormat
+          )}
         </button>
       </div>
     </Panel>
@@ -116,16 +156,19 @@ function FormatGroup({ label, children }: { label: string; children: ReactNode }
 
 function FormatCard({
   format,
+  duration,
   active,
   onSelect,
 }: {
   format: VideoFormat;
+  duration: number | null;
   active: boolean;
   onSelect: () => void;
 }) {
   const t = useT();
   const isAudio = format.ext === "mp3";
-  const size = formatBytes(format.filesize_approx);
+  const size = sizeLabel(format, duration);
+
   return (
     <button
       type="button"
@@ -148,7 +191,14 @@ function FormatCard({
         )}
       </span>
       <span className="mt-1.5 block font-mono text-[10px] uppercase tracking-wider text-white/50">
-        {isAudio ? t.audioChip : (size ?? "mp4")}
+        {size ? (
+          <>
+            <span dir="ltr">{size}</span>
+            {isAudio && <span className="ms-1">{t.estMark}</span>}
+          </>
+        ) : (
+          t.sizeUnknown
+        )}
       </span>
       {active && <span className="absolute end-2 top-2 h-1.5 w-1.5 rounded-full bg-electric" />}
     </button>

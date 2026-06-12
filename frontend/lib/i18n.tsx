@@ -15,7 +15,8 @@ const en = {
   headlineAccent: "Instantly",
   sub: "Paste a YouTube, Instagram, TikTok, X, or Facebook link. Choose quality. Download in seconds.",
   placeholder: "Paste a video link…",
-  grab: "GRAB",
+  grab: "Download",
+  clearUrl: "Clear URL",
   urlAria: "Video URL",
   videosSaved: (count: string) => `${count} videos saved`,
   // fetching / errors
@@ -84,9 +85,18 @@ const en = {
   builtPrefix: "Built by Adnan · ",
   builtSuffix: " on X",
   footerRight: "For personal use only. Respect creators.",
-  // download status bar
-  downloadingNote: "Downloading… check your Downloads folder",
+  // download progress toast
+  downloading: "Downloading...",
+  downloadComplete: "Download complete ✓",
+  cancelled: "Cancelled",
+  downloadError: "Download error",
+  preparing: "Preparing...",
+  received: "received",
+  largeFile: "Large file — may take a moment",
   dismiss: "Dismiss",
+  // format sizes
+  sizeUnknown: "~size unknown",
+  estMark: "(est.)",
 };
 
 export type Dict = typeof en;
@@ -100,7 +110,8 @@ const ar: Dict = {
   headlineAccent: "فوراً",
   sub: "الصق رابطاً من يوتيوب أو إنستغرام أو تيك توك أو X أو فيسبوك. اختر الجودة. حمّل في ثوانٍ.",
   placeholder: "الصق رابط الفيديو هنا…",
-  grab: "جلب",
+  grab: "تحميل",
+  clearUrl: "مسح الرابط",
   urlAria: "رابط الفيديو",
   videosSaved: (count: string) => `تم حفظ ${count} فيديو`,
   contacting: (name: string) => `جارٍ الاتصال بـ ${name}`,
@@ -162,8 +173,16 @@ const ar: Dict = {
   builtPrefix: "بناه عدنان · ",
   builtSuffix: " على X",
   footerRight: "للاستخدام الشخصي فقط. احترم أصحاب المحتوى.",
-  downloadingNote: "جارٍ التنزيل… تحقق من مجلد التنزيلات",
+  downloading: "جارٍ التحميل...",
+  downloadComplete: "تم التحميل ✓",
+  cancelled: "تم الإلغاء",
+  downloadError: "خطأ في التحميل",
+  preparing: "جارٍ التحضير...",
+  received: "مستلم",
+  largeFile: "ملف كبير — قد يستغرق وقتاً",
   dismiss: "إغلاق",
+  sizeUnknown: "~الحجم غير معروف",
+  estMark: "(تقريبي)",
 };
 
 export const STRINGS: Record<Lang, Dict> = { en, ar };
