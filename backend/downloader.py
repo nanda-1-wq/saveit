@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 import shutil
@@ -12,6 +13,8 @@ from typing import Any
 from urllib.parse import urlparse
 
 import yt_dlp
+
+logger = logging.getLogger("saveit")
 
 MAX_URL_LENGTH = 2048
 FORMAT_ID_RE = re.compile(r"^[A-Za-z0-9_.+-]{1,64}$")
@@ -275,6 +278,8 @@ def _extract_info(url: str, opts: dict[str, Any], download: bool = False) -> dic
         with yt_dlp.YoutubeDL(opts) as ydl:
             info = ydl.extract_info(url, download=download)
     except yt_dlp.utils.YoutubeDLError as exc:
+        # TEMP DIAGNOSTIC: surface the real yt-dlp error in Render logs.
+        logger.error(f"Raw yt-dlp error for {url}: {exc}")
         raise _map_yt_error(exc) from exc
     except DownloadServiceError:
         raise
