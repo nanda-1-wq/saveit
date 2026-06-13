@@ -279,7 +279,9 @@ def _extract_info(url: str, opts: dict[str, Any], download: bool = False) -> dic
             info = ydl.extract_info(url, download=download)
     except yt_dlp.utils.YoutubeDLError as exc:
         # TEMP DIAGNOSTIC: surface the real yt-dlp error in Render logs.
-        logger.error(f"Raw yt-dlp error for {url}: {exc}")
+        # url is user-supplied, so strip control chars to prevent forged log lines.
+        message = re.sub(r"[\r\n\x00-\x1f\x7f]", " ", f"Raw yt-dlp error for {url}: {exc}")
+        logger.error(message)
         raise _map_yt_error(exc) from exc
     except DownloadServiceError:
         raise
