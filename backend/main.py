@@ -1,5 +1,6 @@
 """SaveIt API — /health, /info and /download on FastAPI + yt-dlp."""
 
+import logging
 import os
 
 from dotenv import load_dotenv
@@ -14,6 +15,29 @@ import downloader
 from downloader import DownloadServiceError
 
 load_dotenv()
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("saveit")
+
+
+def _log_cookie_status() -> None:
+    """Surface, on startup, exactly what Render mounted into /etc/secrets so we
+    can confirm the cookie file's filename matches what yt-dlp expects."""
+    secrets_dir = "/etc/secrets"
+    if os.path.isdir(secrets_dir):
+        names = sorted(os.listdir(secrets_dir))
+        logger.info("Contents of %s: %s", secrets_dir, names or "(empty)")
+    else:
+        logger.info("No %s directory on this host", secrets_dir)
+
+    cookie_file = downloader.COOKIE_FILE
+    if os.path.isfile(cookie_file):
+        logger.info("YouTube cookies loaded from %s", cookie_file)
+    else:
+        logger.info(
+            "No YouTube cookie file found at %s — YouTube requests may be blocked on this host",
+            cookie_file,
+        )
 
 
 def _client_ip(request: Request) -> str:
@@ -44,6 +68,8 @@ limiter = Limiter(key_func=_client_ip)
 
 app = FastAPI(title="SaveIt API", version="1.0.0")
 app.state.limiter = limiter
+
+_log_cookie_status()
 
 app.add_middleware(
     CORSMiddleware,

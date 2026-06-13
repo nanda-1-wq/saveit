@@ -19,6 +19,10 @@ MP3_FORMAT_RE = re.compile(r"^mp3-(320|192|128)$")
 MP3_BITRATES = (320, 192, 128)
 BEST_FORMAT_ID = "best"
 
+# Source path for the logged-in YouTube cookie export. Production supplies this
+# via a Render Secret File (uploaded as "cookies.txt", mounted at /etc/secrets/).
+COOKIE_FILE = os.getenv("YTDLP_COOKIES_FILE", "/etc/secrets/cookies.txt")
+
 PLATFORM_DOMAINS: dict[str, tuple[str, ...]] = {
     "youtube": ("youtube.com", "youtu.be"),
     "instagram": ("instagram.com",),
@@ -347,7 +351,7 @@ def _cookie_file() -> str | None:
     each run and Render mounts secrets read-only — hence the /tmp copy.
     Absent file means no-op (local dev, other platforms).
     """
-    source = os.getenv("YTDLP_COOKIES_FILE", "/etc/secrets/cookies.txt")
+    source = COOKIE_FILE
     if not os.path.isfile(source):
         return None
     writable = Path(tempfile.gettempdir()) / "saveit-cookies.txt"
